@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from agentic_quorum.config import QuorumConfig
+from agentic_quorum.gatekeeper import Gatekeeper, GatekeeperVerdict
 from agentic_quorum.prompts import (
     GENERAL_ARCHITECT_PROMPT,
     GENERAL_MECHANIST_PROMPT,
@@ -37,6 +38,10 @@ class QuorumEngine:
             default_flags=self.config.runner.default_flags,
             default_reasoning_effort=self.config.runner.default_reasoning_effort,
             timeout_seconds=self.config.runner.timeout_seconds,
+        )
+        self.gatekeeper = Gatekeeper(
+            runner=self.runner,
+            model=self.config.gatekeeper.model,
         )
 
     def _prepare_run_dir(self, topic: str) -> Path:
@@ -72,13 +77,38 @@ class QuorumEngine:
         preset_name: Optional[str] = None,
         output_dir: Optional[Path] = None,
         reasoning_effort_override: Optional[str] = None,
+        gatekeeper_mode: Optional[str] = None,
     ) -> Path:
         """
-        Execute the full 3-phase Quorum consensus pipeline.
-        Returns the path to the completed run directory.
+        Execute the full Quorum consensus pipeline:
+        Phase 0: Socratic Gatekeeper (Premise audit)
+        Phase 1: Divergent Parallel Exploration (Architect, Mechanist, Critic)
+        Phase 2: Adversarial Cross-Critique (Red-Team attack)
+        Phase 3: Epistemic Convergence & Master Synthesis
         """
-        run_dir = output_dir or self._prepare_run_dir(topic)
-        prompts = self._resolve_prompts(topic, preset_name)
+        gk_mode = gatekeeper_mode or self.config.gatekeeper.mode
+        effective_topic = topic
+        gatekeeper_verdict: Optional[GatekeeperVerdict] = None
+
+        # ----------------------------------------------------------------------
+        # PHASE 0: SOCRATIC GATEKEEPER & PREMISE AUDIT
+        # ----------------------------------------------------------------------
+        if self.config.gatekeeper.enabled and gk_mode != "off":
+            print(f"\n[Phase 0/3] 🛡️  Socratic Gatekeeper (Auditing premise via {self.config.gatekeeper.model})...")
+            gatekeeper_verdict = await self.gatekeeper.audit_topic(topic)
+
+            if gk_mode == "interactive":
+                effective_topic = self.gatekeeper.interact(gatekeeper_verdict, topic)
+            elif gk_mode == "auto":
+                if gatekeeper_verdict.is_anchored and gatekeeper_verdict.broadened_topic:
+                    print(f"⚠️  [Gatekeeper Auto] Anchoring detected! Broadening topic to:")
+                    print(f"   \"{gatekeeper_verdict.broadened_topic}\"")
+                    effective_topic = gatekeeper_verdict.broadened_topic
+                else:
+                    print("✓ [Gatekeeper Auto] Premise verified.")
+
+        run_dir = output_dir or self._prepare_run_dir(effective_topic)
+        prompts = self._resolve_prompts(effective_topic, preset_name)
 
         models = self.config.models
         m_architect = models["architect"]
@@ -92,9 +122,24 @@ class QuorumEngine:
         r_crit = reasoning_effort_override or self.config.get_reasoning_effort("critic")
         r_syn = reasoning_effort_override or self.config.get_reasoning_effort("synthesizer")
 
+        # Write Gatekeeper Audit artifact
+        if gatekeeper_verdict:
+            (run_dir / "00_gatekeeper_audit.md").write_text(
+                f"# Phase 0: Socratic Gatekeeper Audit\n\n"
+                f"**Original User Topic:** {topic}\n"
+                f"**Effective Researched Topic:** {effective_topic}\n"
+                f"**Premise Anchored:** {gatekeeper_verdict.is_anchored}\n\n"
+                f"## Wrist-Slap / Flaw Analysis\n{gatekeeper_verdict.wrist_slap}\n\n"
+                f"## Industry Standard / Reality Check\n{gatekeeper_verdict.industry_standard}\n\n"
+                f"## Viable Alternatives\n" + "\n".join(f"- {a}" for a in gatekeeper_verdict.viable_alternatives) + "\n\n"
+                f"## Proposed Broadened Agenda\n{gatekeeper_verdict.broadened_topic}\n",
+                encoding="utf-8",
+            )
+
         # Write topic overview
         (run_dir / "00_topic.md").write_text(
-            f"# Research Topic\n\n**Topic:** {topic}\n"
+            f"# Research Topic\n\n**Topic:** {effective_topic}\n"
+            f"**Original Topic:** {topic}\n"
             f"**Preset:** {preset_name or 'None'}\n"
             f"**Timestamp:** {datetime.now().isoformat()}\n"
             f"**Nodes & Reasoning Levels:**\n"
@@ -105,16 +150,17 @@ class QuorumEngine:
             encoding="utf-8",
         )
 
-        print(f"\n" + "=" * 70)
+        print(f"\n" + "=" * 75)
         print(f"🚀 AGENTIC QUORUM :: STARTING RESEARCH")
-        print(f"   Topic  : {topic}")
+        print(f"   Effective Topic : {effective_topic}")
         if preset_name:
-            print(f"   Preset : {preset_name}")
-        print(f"   Output : {run_dir.resolve()}")
-        print("=" * 70)
+            print(f"   Preset          : {preset_name}")
+        print(f"   Output Directory: {run_dir.resolve()}")
+        print("=" * 75)
 
         summary_metrics: Dict[str, Any] = {
-            "topic": topic,
+            "original_topic": topic,
+            "effective_topic": effective_topic,
             "preset": preset_name,
             "start_time": datetime.now().isoformat(),
             "models": models,
@@ -175,7 +221,7 @@ class QuorumEngine:
 
         f_critique = run_dir / "02_adversarial_critique_grok.md"
         adv_prompt = prompts["adversarial"].format(
-            topic=topic,
+            topic=effective_topic,
             architect_draft=out_arch,
             mechanist_draft=out_mech,
         )
@@ -202,7 +248,7 @@ class QuorumEngine:
 
         f_final = run_dir / "03_FINAL_SYNTHESIS_SONNET.md"
         syn_prompt = prompts["synthesizer"].format(
-            topic=topic,
+            topic=effective_topic,
             architect_draft=out_arch,
             mechanist_draft=out_mech,
             critic_draft=out_crit,
@@ -233,9 +279,9 @@ class QuorumEngine:
             encoding="utf-8",
         )
 
-        print("\n" + "=" * 70)
+        print("\n" + "=" * 75)
         print(f"✅ QUORUM CONSENSUS REACHED (Total time: {total_time:.1f}s)")
         print(f"   Final Master RFC -> {f_final.resolve()}")
-        print("=" * 70)
+        print("=" * 75)
 
         return run_dir

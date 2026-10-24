@@ -3,7 +3,8 @@
     "architect": "gpt-6.1-sol",
     "mechanist": "kimi-k3",
     "critic": "grok-4.7",
-    "synthesizer": "claude-sonnet-5.5"
+    "synthesizer": "claude-sonnet-5.5",
+    "gatekeeper": "grok-4.7"
   },
   "roles": {
     "architect": {
@@ -11,14 +12,14 @@
       "lab": "OpenAI",
       "title": "Systems Architect & Planner",
       "focus": "Pipeline decomposition, intermediate representation (IR), formal structures, and lifecycle workflows.",
-      "reasoning_effort": "xhigh"
+      "reasoning_effort": "high"
     },
     "mechanist": {
       "model": "kimi-k3",
       "lab": "Moonshot AI",
       "title": "Deep Runtime & Mechanics Engineer",
       "focus": "Reconciler state machine, protocol edge cases, runtime type systems, and async execution models.",
-      "reasoning_effort": "max"
+      "reasoning_effort": "xhigh"
     },
     "critic": {
       "model": "grok-4.7",
@@ -32,14 +33,19 @@
       "lab": "Anthropic",
       "title": "Chief Synthesizer & Master Arbitrator",
       "focus": "Reconciling conflicting models, mapping consensus vs divergence, epistemic rigor, and creating the master RFC.",
-      "reasoning_effort": "max"
+      "reasoning_effort": "high"
     }
+  },
+  "gatekeeper": {
+    "enabled": true,
+    "mode": "interactive",
+    "model": "grok-4.7"
   },
   "runner": {
     "cli_binary": "copilot",
     "default_flags": ["-s", "--no-color"],
-    "default_reasoning_effort": "max",
-    "timeout_seconds": 900,
+    "default_reasoning_effort": "high",
+    "timeout_seconds": 1200,
     "runs_dir": "runs"
   }
 }

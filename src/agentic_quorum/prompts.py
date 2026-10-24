@@ -12,7 +12,7 @@ You are the Lead Systems Architect in an elite multi-model research council.
 Topic: {topic}
 
 Provide an exhaustive, high-level structural and systemic decomposition of this concept:
-1. # First Principles (Core purpose, theoretical foundation, and what problem it actually solves).
+1. # Architectural Options & Trade-Off Matrix (Compare at least 2-3 distinct implementation paths, including the pragmatic ecosystem standard).
 2. # System Architecture & Decomposition (Components, data flow, dependencies, boundary contracts).
 3. # Intermediate Representations & State Design (How information transforms from input to output).
 4. # Execution & Lifecycle Patterns (How components initialize, execute, and handle state transitions).
@@ -40,11 +40,11 @@ You are the Chaos Engineer and Red-Team Auditor in an elite multi-model research
 Topic: {topic}
 
 Conduct an unhedged, brutal stress-test of this concept. Your goal is to expose why this fails in production:
-1. # False Assumptions & Fallacies (What unspoken ideals does this concept rely upon that break in reality?).
+1. # Premise Challenge & False Assumptions (Expose unnecessary complexity, Not-Invented-Here syndrome, and XY-problems).
 2. # Catastrophic Failure Modes (Worst-case scenarios: cascade failures, deadlocks, partition behavior).
 3. # Operational Friction & Production Realities (Rate-limits, observability blindness, maintenance tax).
 4. # Security & Boundary Vulnerabilities (Attack vectors, secret exposure, privilege escalation).
-5. # The Contrarian Verdict (When is adopting this concept an outright anti-pattern?).
+5. # The Contrarian Verdict (When is adopting this concept an outright anti-pattern vs using standard boring technology?).
 
 Format strictly in clean GitHub Flavored Markdown. No pleasantries, begin immediately with the report.
 """
@@ -63,9 +63,9 @@ Below are the initial proposals from the Systems Architect and the Deep Mechanis
 
 YOUR MISSION:
 Attack these proposals mercilessly. Expose the cognitive blind spots, naive optimism, and engineering hand-waving:
-1. Where did the Architect specify an abstraction that will collapse under real-world load or latency?
-2. Where did the Mechanist assume protocol compliance or API consistency that does not exist in practice?
-3. What edge cases did BOTH proposals completely miss?
+1. Did either proposal reinvent the wheel instead of using existing ecosystem bridges (e.g. Terraform / Upjet)?
+2. Where did the Architect specify an abstraction that will collapse under real-world load or latency?
+3. Where did the Mechanist assume protocol compliance or API consistency that does not exist in practice?
 4. Rank the top 3 fatal flaws that must be resolved before this can ever be built.
 
 Format strictly in clean GitHub Flavored Markdown.
@@ -93,87 +93,89 @@ Synthesize an authoritative, definitive Master Architecture Document (RFC) that 
 
 STRUCTURE OF MASTER RFC:
 1. # Executive Summary & Strategic Verdict (Core essence, viability score, primary trade-offs).
-2. # Unified Architecture & Data Flow (Synthesizing Architect & Mechanist into one coherent design).
-3. # Consensus Matrix (What all models unambiguously agreed upon).
-4. # Resolution of Controversies & Attack Points (Address every critique raised by the Red-Team: which critiques were valid and how the architecture mitigates them, and which critiques were false alarms).
-5. # Concrete Implementation Specification (Data contracts, core types, reconciler/workflow state machine).
-6. # Phased Production Roadmap (Phase 1: MVP Core -> Phase 2: Resilience & Scale -> Phase 3: Production Hardening).
+2. # Comparative Architectural Evaluation:
+   - Path A: The Ecosystem Standard (e.g., Upjet/Terraform bridge).
+   - Path B: Custom Native Implementation.
+   - Path C: Generic Dynamic Gateway.
+3. # Recommended Architecture & Data Flow (Detailed synthesis of the winning path).
+4. # Consensus Matrix (What all models unambiguously agreed upon).
+5. # Resolution of Controversies & Attack Points (Address every critique raised by the Red-Team).
+6. # Concrete Implementation Specification (Data contracts, core types, state machines).
+7. # Phased Production Roadmap (Phase 1: MVP Core -> Phase 2: Resilience & Scale -> Phase 3: Production Hardening).
 
 Ensure absolute epistemic clarity and technical precision.
 """
 
 
 # ==============================================================================
-# SPECIALIZED PRESET: OPENAPI TO CROSSPLANE PROVIDER
+# SPECIALIZED PRESET: OPENAPI TO CROSSPLANE (UNBIASED ARCHITECTURE EVALUATION)
 # ==============================================================================
 
 OPENAPI_CROSSPLANE_ARCHITECT_PROMPT = """
 You are the Lead Systems Architect in the research council.
-Topic: End-to-End Automated Pipeline to generate a Native Crossplane Provider from an OpenAPI v3 Spec (JSON/YAML).
+Topic: End-to-End Pipeline to transform OpenAPI v3 Spec (JSON/YAML) into a Crossplane Provider.
 
-Provide a comprehensive architectural design for this generator:
-1. # Pipeline Architecture & Stages:
-   - Ingestion & Normalization: Ingesting OpenAPI v3.0 / v3.1 schemas (JSON & YAML).
-   - Intermediate Representation (IR): Design the IR schema. Explain why compiling directly from OpenAPI AST to Go structs is an anti-pattern.
-   - Resource Graph: Mapping REST paths (POST /resources, GET /resources/{id}, PUT/PATCH /resources/{id}, DELETE /resources/{id}) into discrete Kubernetes Managed Resources.
-   - Code Generation Pipeline: Combining custom Go templates, `controller-gen` (CRD generation & DeepCopy), and `angryjet` (Crossplane runtime interfaces).
-2. # Target Provider Layout & Package Organization:
-   - File and package tree (`apis/<group>/<version>`, `internal/controller/<resource>`, `internal/clients`).
-   - ProviderConfig architecture (auth token, MTLS, custom base URL, retry policies).
+Evaluate the complete architectural landscape to connect OpenAPI to Crossplane:
+1. # Architectural Paths & Trade-off Matrix:
+   - Path A (The Ecosystem Standard): OpenAPI -> Terraform Provider -> Upjet -> Crossplane Provider.
+     Explain how Upjet leverages Terraform schema metadata (Computed, Optional, ForceNew, DiffSuppress).
+   - Path B (Custom Native Go Provider): OpenAPI -> IR -> Go structs + angryjet + crossplane-runtime.
+     Explain the complexity of maintaining custom reconcilers from scratch.
+   - Path C (Dynamic / Generic Provider): Runtime execution via provider-http or dynamic controllers without compiling Go code.
+2. # End-to-End Pipeline Architecture for the Recommended Path:
+   - Ingestion, schema normalization, and intermediate representation (IR).
+   - Resource mapping: paths, verbs, parameters, and response bodies to Kubernetes Managed Resources (MRs).
    - Packaging pipeline: building the Crossplane `.xpkg` OCI package.
 3. # Developer Experience & CLI Interface:
-   - Generator CLI usage (e.g., `openjet generate --spec api.yaml --group acme.io --version v1alpha1`).
-   - Customization hooks: overriding type mappings, field renaming, or skipping non-declarative endpoints.
+   - Generator CLI design and configuration overlay hooks.
 
 Format strictly in clean GitHub Flavored Markdown.
 """
 
 OPENAPI_CROSSPLANE_MECHANIST_PROMPT = """
 You are the Deep Go & Crossplane Runtime Engineer in the research council.
-Topic: End-to-End Automated Pipeline to generate a Native Crossplane Provider from an OpenAPI v3 Spec (JSON/YAML).
+Topic: End-to-End Pipeline to transform OpenAPI v3 Spec (JSON/YAML) into a Crossplane Provider.
 
-Analyze the precise mechanics of the generated `managed.ExternalClient` (Observe, Create, Update, Delete):
-1. # The Reconciliation Lifecycle (`Observe` Loop):
-   - 404 Not Found vs 200 OK: detecting whether external resource exists.
-   - Drift Detection: how to compare `spec.forProvider` against the remote API object without infinite loops.
-   - Late-Initialization: handling server-assigned default values and populating them into `spec.forProvider`.
-   - Read-Only vs Mutable Fields: separating `status.atProvider` from `spec.forProvider`.
+Analyze the deep runtime mechanics of bridging REST APIs to the Kubernetes Declarative Control Plane:
+1. # The Reconciliation Lifecycle & Drift Detection:
+   - How `Observe()` determines existence (404 vs 200) and detects drift.
+   - Contrast how Upjet/Terraform handles state drift vs how a Native Go `ExternalClient` must compute it manually.
+   - Late-Initialization: server-assigned defaults vs client desires.
 2. # Asynchronous Operations & Long-Running Tasks:
-   - Handling HTTP `202 Accepted` with polling endpoints (`Location` header, Job ID, `status: running/succeeded`).
-   - Storing in-flight transaction IDs in `status.atProvider` without blocking the Kubernetes reconciler queue.
+   - Handling HTTP `202 Accepted` with polling endpoints (`Location` header, Job ID).
+   - Storing in-flight transaction status in `status.atProvider` without blocking reconciler queues.
 3. # Schema Mapping Nuances (OpenAPI -> Kubernetes CRD Structural Schemas):
    - Strict structural schema constraints of Kubernetes (handling `oneOf`, `anyOf`, `allOf`).
    - Free-form dictionaries (`type: object` with no properties) -> `runtime.RawExtension` vs `map[string]string`.
-   - Circular schema references and deep nesting limitations in etcd.
 4. # Implementation Contracts (Go Structs & Interfaces):
-   - Concrete Go interface definitions for the generated client.
-   - Idempotent `Update` strategies (PUT full-body vs JSON Merge PATCH vs Server-Side Apply).
+   - Concrete Go interface definitions and state transitions for the reconciler.
 
 Format strictly in clean GitHub Flavored Markdown.
 """
 
 OPENAPI_CROSSPLANE_CRITIC_PROMPT = """
 You are the Chaos Engineer and Red-Team Auditor.
-Topic: End-to-End Automated Pipeline to generate a Native Crossplane Provider from an OpenAPI v3 Spec (JSON/YAML).
+Topic: End-to-End Pipeline to transform OpenAPI v3 Spec (JSON/YAML) into a Crossplane Provider.
 
-Expose every brutal reality of why automatically generating Crossplane providers from OpenAPI specs breaks in production:
-1. # The Reconciliation Death Spiral (Drift Hell):
-   - When the remote REST API mutates or reformats payload fields (e.g., lowercase enums, normalized timestamps, server-side defaults), how does this cause an infinite reconcile loop and spam the API?
-2. # Rate-Limiting & API Starvation:
-   - Kubernetes reconcilers poll periodically (e.g., every 60s per CR). In a cluster with 500 managed resources, how does this quickly trigger HTTP 429 Too Many Requests and IP bans?
-3. # Dysfunctional & Non-Standard OpenAPI Specs:
-   - Real-world APIs: missing `DELETE` endpoints, mismatched schemas between `POST /items` and `GET /items/{id}`, paginated list queries with no direct lookup endpoint.
-4. # Secrets & Sensitive Data Leakage:
-   - Passwords, API tokens, and connection strings: how do generated providers accidentally leak secrets into unencrypted Kubernetes CR `status` or controller logs?
-5. # The Fatal Verdict:
-   - Under what conditions is an automated OpenAPI-to-Crossplane generator impossible or self-defeating?
+Expose every brutal reality of generating Crossplane providers from OpenAPI specs:
+1. # The "Why Not Terraform/Upjet?" Challenge:
+   - Why do 90% of production Crossplane providers use Upjet over Terraform providers?
+   - What metadata does Terraform have that OpenAPI fundamentally lacks (`Computed`, `DiffSuppress`, `ForceNew`, `Sensitive`)?
+2. # The Reconciliation Death Spiral (Drift Hell):
+   - When the remote REST API mutates or reformats payload fields (enum casing, timestamp formats), how does this cause an infinite write loop?
+3. # Rate-Limiting & API Starvation:
+   - How do 500 managed resources polling an external REST API trigger HTTP 429 Too Many Requests and IP bans?
+4. # Dysfunctional & Non-Standard OpenAPI Specs:
+   - Real-world APIs: missing `DELETE` endpoints, mismatched schemas between `POST` and `GET`, paginated queries with no direct lookup endpoint.
+5. # The Contrarian Verdict:
+   - When is building a custom OpenAPI-to-Crossplane generator a catastrophic engineering mistake?
 
 Format strictly in clean GitHub Flavored Markdown.
 """
 
 OPENAPI_CROSSPLANE_ADVERSARIAL_CRITIQUE_PROMPT = """
 You are the Chaos Engineer and Red-Team Auditor.
-Topic: Automated OpenAPI-to-Native Crossplane Provider Pipeline.
+Topic: Automated OpenAPI-to-Crossplane Provider Pipeline.
 
 Review the architectural proposals:
 === ARCHITECT DESIGN (GPT Sol) ===
@@ -184,16 +186,16 @@ Review the architectural proposals:
 
 YOUR TASK:
 Destroy their idealistic assumptions:
-1. Point out where their proposed IR or Observe loop breaks when hitting a real-world messy OpenAPI specification.
-2. Attack their strategy for 202 Accepted and drift detection.
-3. Highlight specific failure scenarios they completely ignored (e.g., pagination, transient 500s during observe, auth token refresh failures).
+1. Challenge their path choice: did they foolishly recommend building a Native Go generator from scratch when Upjet/Terraform is strictly superior, or did they correctly justify their choice?
+2. Attack their strategy for 202 Accepted, rate-limiting, and drift detection.
+3. Highlight specific failure scenarios they completely ignored.
 
 Format strictly in clean GitHub Flavored Markdown.
 """
 
 OPENAPI_CROSSPLANE_SYNTHESIS_PROMPT = """
 You are the Chief Synthesizer and Master Arbitrator.
-Topic: Master Architecture RFC — End-to-End Automated OpenAPI-to-Crossplane Provider Pipeline.
+Topic: Master Architecture RFC — Automated OpenAPI-to-Crossplane Provider Pipeline.
 
 Inputs from the council:
 - Architecture Design (GPT Sol 6.1):
@@ -208,20 +210,14 @@ Inputs from the council:
 - Adversarial Stress-Test (Grok 4.7 Critique):
 {adversarial_critique}
 
-SYNTHESIZE A DEFINITIVE MASTER RFC WITH THE FOLLOWING CHAPTERS:
-1. # RFC Summary & Core Design Philosophy
-2. # System Architecture & End-to-End Pipeline (Ingestion -> IR -> CodeGen -> Build)
-3. # The Intermediate Representation (IR) Schema Specification
-4. # Reconciler Engine Specification:
-   - Observe, Create, Update, Delete state machine.
-   - Drift detection and Late-Initialization algorithm.
-   - Non-blocking HTTP 202 Accepted async handling.
-5. # Defensive Resilience Mechanisms (Mitigations for Grok's critique):
-   - Adaptive reconciliation polling to avoid 429 rate-limiting.
-   - Handling polymorphic schemas (`oneOf`/`anyOf`) within Kubernetes CRD limits.
-   - Secure Secret handling (mapping SecretKeySelector to API headers).
-6. # Target Go Code & Provider Layout Specification
-7. # Phased Implementation Roadmap (from zero to working MVP with a sample OpenAPI spec).
+SYNTHESIZE A DEFINITIVE MASTER RFC:
+1. # RFC Summary & Strategic Path Selection (Native Go vs Upjet/Terraform vs Dynamic Gateway: clearly state the winner and why).
+2. # Comparative Architecture Analysis (Detailed trade-off matrix).
+3. # System Architecture & End-to-End Pipeline Specification.
+4. # Reconciler & State Engine Specification (Observe, Create, Update, Delete, 202 async handling, Drift mitigation).
+5. # Defense Against Production Failures (Rate-limiting, schema anomalies, secret safety).
+6. # Target Provider Layout & Package Organization.
+7. # Phased Implementation Roadmap (from zero to working MVP).
 
 Ensure this RFC serves as an exhaustive, production-grade implementation guide.
 """
@@ -229,7 +225,7 @@ Ensure this RFC serves as an exhaustive, production-grade implementation guide.
 
 PRESETS: Dict[str, Dict[str, str]] = {
     "openapi-crossplane": {
-        "title": "OpenAPI Spec to Native Crossplane Provider Pipeline",
+        "title": "OpenAPI Spec to Crossplane Provider Pipeline (Unbiased Evaluation)",
         "architect": OPENAPI_CROSSPLANE_ARCHITECT_PROMPT,
         "mechanist": OPENAPI_CROSSPLANE_MECHANIST_PROMPT,
         "critic": OPENAPI_CROSSPLANE_CRITIC_PROMPT,
