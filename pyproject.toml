@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-quorum"
+version = "0.1.0"
+description = "Multi-model consensus research engine orchestrating frontier AI models via Copilot CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Agentic Quorum Contributors" }
+]
+keywords = [
+    "crossplane", "openapi", "agent-swarm", "copilot-cli",
+    "gpt-sol", "kimi", "grok", "claude-sonnet", "multi-agent-research"
+]
+dependencies = []
+
+[project.scripts]
+agentic-quorum = "agentic_quorum.cli:main"
+aquorum = "agentic_quorum.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
